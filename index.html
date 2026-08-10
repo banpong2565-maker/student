@@ -1,0 +1,1740 @@
+```html
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Student Management - Supabase</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                "Noto Sans Thai",
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eff6ff,
+                    #f8fafc
+                );
+
+            color: #1e293b;
+
+        }
+
+
+        .container {
+
+            max-width: 1150px;
+
+            margin: 0 auto;
+
+            padding: 30px 20px;
+
+        }
+
+
+        /* HEADER */
+
+        .header {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #4f46e5
+                );
+
+            color: white;
+
+            padding: 30px;
+
+            border-radius: 18px;
+
+            margin-bottom: 22px;
+
+            box-shadow:
+                0 10px 30px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    .20
+                );
+
+        }
+
+
+        .header h1 {
+
+            margin: 0 0 8px;
+
+            font-size: 30px;
+
+        }
+
+
+        .header p {
+
+            margin: 0;
+
+            opacity: .9;
+
+        }
+
+
+        /* CARD */
+
+        .card {
+
+            background: white;
+
+            border-radius: 16px;
+
+            padding: 25px;
+
+            margin-bottom: 22px;
+
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .06
+                );
+
+            border:
+                1px solid #e2e8f0;
+
+        }
+
+
+        .card-title {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .card-title h2 {
+
+            margin: 0;
+
+            font-size: 21px;
+
+        }
+
+
+        /* CONNECTION */
+
+        .connection {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            padding: 12px 15px;
+
+            border-radius: 10px;
+
+            background: #f8fafc;
+
+            margin-bottom: 20px;
+
+            border:
+                1px solid #e2e8f0;
+
+        }
+
+
+        .dot {
+
+            width: 11px;
+
+            height: 11px;
+
+            border-radius: 50%;
+
+            background: #94a3b8;
+
+        }
+
+
+        .dot.online {
+
+            background: #22c55e;
+
+            box-shadow:
+                0 0 0 4px
+                rgba(
+                    34,
+                    197,
+                    94,
+                    .15
+                );
+
+        }
+
+
+        .dot.error {
+
+            background: #ef4444;
+
+        }
+
+
+        /* FORM */
+
+        .form-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    1fr
+                );
+
+            gap: 18px;
+
+        }
+
+
+        .form-group {
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+
+        .full {
+
+            grid-column:
+                1 / -1;
+
+        }
+
+
+        label {
+
+            font-weight: 600;
+
+            margin-bottom: 7px;
+
+            color: #334155;
+
+        }
+
+
+        input,
+        select {
+
+            width: 100%;
+
+            padding: 12px 14px;
+
+            border:
+                1px solid #cbd5e1;
+
+            border-radius: 9px;
+
+            font-size: 15px;
+
+            outline: none;
+
+            transition: .2s;
+
+        }
+
+
+        input:focus,
+        select:focus {
+
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    .10
+                );
+
+        }
+
+
+        /* BUTTONS */
+
+        .buttons {
+
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 22px;
+
+            flex-wrap: wrap;
+
+        }
+
+
+        button {
+
+            border: none;
+
+            padding:
+                12px 20px;
+
+            border-radius: 9px;
+
+            cursor: pointer;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            transition: .2s;
+
+        }
+
+
+        button:hover {
+
+            transform:
+                translateY(-1px);
+
+            opacity: .92;
+
+        }
+
+
+        .btn-save {
+
+            background: #16a34a;
+
+            color: white;
+
+        }
+
+
+        .btn-load {
+
+            background: #2563eb;
+
+            color: white;
+
+        }
+
+
+        .btn-test {
+
+            background: #7c3aed;
+
+            color: white;
+
+        }
+
+
+        .btn-clear {
+
+            background: #64748b;
+
+            color: white;
+
+        }
+
+
+        /* STATUS */
+
+        .status {
+
+            margin-top: 18px;
+
+            padding: 14px;
+
+            border-radius: 9px;
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+        }
+
+
+        .status.success {
+
+            background: #dcfce7;
+
+            color: #166534;
+
+            border-color:
+                #bbf7d0;
+
+        }
+
+
+        .status.error {
+
+            background: #fee2e2;
+
+            color: #991b1b;
+
+            border-color:
+                #fecaca;
+
+        }
+
+
+        .status.info {
+
+            background: #dbeafe;
+
+            color: #1e40af;
+
+            border-color:
+                #bfdbfe;
+
+        }
+
+
+        /* TABLE */
+
+        .table-wrapper {
+
+            overflow-x: auto;
+
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse:
+                collapse;
+
+            min-width: 700px;
+
+        }
+
+
+        th {
+
+            background: #f8fafc;
+
+            color: #475569;
+
+            font-weight: 600;
+
+        }
+
+
+        th,
+        td {
+
+            padding: 13px 12px;
+
+            border-bottom:
+                1px solid #e2e8f0;
+
+            text-align: left;
+
+        }
+
+
+        tbody tr:hover {
+
+            background: #f8fafc;
+
+        }
+
+
+        .grade {
+
+            display: inline-block;
+
+            min-width: 32px;
+
+            padding: 5px 8px;
+
+            text-align: center;
+
+            border-radius: 6px;
+
+            background: #dbeafe;
+
+            color: #1d4ed8;
+
+            font-weight: bold;
+
+        }
+
+
+        .empty {
+
+            text-align: center;
+
+            padding: 35px;
+
+            color: #64748b;
+
+        }
+
+
+        /* DEBUG */
+
+        .debug {
+
+            background: #0f172a;
+
+            color: #22c55e;
+
+            padding: 18px;
+
+            border-radius: 10px;
+
+            min-height: 150px;
+
+            white-space: pre-wrap;
+
+            font-family:
+                Consolas,
+                monospace;
+
+            font-size: 13px;
+
+            overflow-x: auto;
+
+        }
+
+
+        /* API KEY */
+
+        .key-box {
+
+            display: flex;
+
+            gap: 10px;
+
+        }
+
+
+        .key-box input {
+
+            flex: 1;
+
+        }
+
+
+        /* MOBILE */
+
+        @media (
+            max-width: 700px
+        ) {
+
+            .container {
+
+                padding: 15px;
+
+            }
+
+
+            .form-grid {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .full {
+
+                grid-column: auto;
+
+            }
+
+
+            .header h1 {
+
+                font-size: 24px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>
+            🎓 Student Management
+        </h1>
+
+        <p>
+            ระบบบันทึกข้อมูลนักเรียน
+            ด้วย Supabase REST API
+        </p>
+
+    </div>
+
+
+    <!-- API KEY -->
+
+    <div class="card">
+
+        <div class="card-title">
+
+            <span>🔑</span>
+
+            <h2>
+                Supabase Connection
+            </h2>
+
+        </div>
+
+
+        <div class="connection">
+
+            <span
+                id="connectionDot"
+                class="dot"
+            ></span>
+
+            <span id="connectionText">
+                ยังไม่ได้ทดสอบการเชื่อมต่อ
+            </span>
+
+        </div>
+
+
+        <label>
+            Supabase URL
+        </label>
+
+        <input
+            id="supabaseUrl"
+            value="https://psfmvozmxfsmjgdhncep.supabase.co"
+        >
+
+
+        <label style="margin-top:15px;">
+            API Key
+        </label>
+
+        <div class="key-box">
+
+            <input
+                id="apiKey"
+                type="password"
+                placeholder="ใส่ API Key"
+            >
+
+            <button
+                class="btn-test"
+                id="testConnectionBtn"
+            >
+                🔍 ทดสอบ
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- STUDENT FORM -->
+
+    <div class="card">
+
+        <div class="card-title">
+
+            <span>👨‍🎓</span>
+
+            <h2>
+                เพิ่มข้อมูลนักเรียน
+            </h2>
+
+        </div>
+
+
+        <div class="form-grid">
+
+
+            <div class="form-group">
+
+                <label>
+                    ชื่อ
+                </label>
+
+                <input
+                    id="firstName"
+                    type="text"
+                    placeholder="กรอกชื่อ"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    นามสกุล
+                </label>
+
+                <input
+                    id="lastName"
+                    type="text"
+                    placeholder="กรอกนามสกุล"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    เลขประจำตัวนักเรียน
+                </label>
+
+                <input
+                    id="studentNumber"
+                    type="text"
+                    placeholder="เช่น 65001"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    คะแนน
+                </label>
+
+                <input
+                    id="score"
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="0 - 100"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    เกรด
+                </label>
+
+                <select id="grade">
+
+                    <option value="">
+                        -- เลือกเกรด --
+                    </option>
+
+                    <option value="A">
+                        A
+                    </option>
+
+                    <option value="B+">
+                        B+
+                    </option>
+
+                    <option value="B">
+                        B
+                    </option>
+
+                    <option value="C+">
+                        C+
+                    </option>
+
+                    <option value="C">
+                        C
+                    </option>
+
+                    <option value="D+">
+                        D+
+                    </option>
+
+                    <option value="D">
+                        D
+                    </option>
+
+                    <option value="F">
+                        F
+                    </option>
+
+                </select>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="buttons">
+
+            <button
+                class="btn-save"
+                id="saveBtn"
+            >
+                💾 บันทึกข้อมูล
+            </button>
+
+
+            <button
+                class="btn-clear"
+                id="clearBtn"
+            >
+                🧹 ล้างข้อมูล
+            </button>
+
+        </div>
+
+
+        <div
+            id="status"
+            class="status"
+        >
+            พร้อมบันทึกข้อมูล
+        </div>
+
+    </div>
+
+
+    <!-- STUDENT TABLE -->
+
+    <div class="card">
+
+        <div
+            class="card-title"
+            style="
+                justify-content:
+                space-between;
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                "
+            >
+
+                <span>📋</span>
+
+                <h2>
+                    รายชื่อนักเรียน
+                </h2>
+
+            </div>
+
+
+            <button
+                class="btn-load"
+                id="loadBtn"
+            >
+                🔄 โหลดข้อมูล
+            </button>
+
+        </div>
+
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            #
+                        </th>
+
+                        <th>
+                            เลขประจำตัว
+                        </th>
+
+                        <th>
+                            ชื่อ - นามสกุล
+                        </th>
+
+                        <th>
+                            คะแนน
+                        </th>
+
+                        <th>
+                            เกรด
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="studentTableBody"
+                >
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="empty"
+                        >
+                            ยังไม่มีข้อมูล
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- DEBUG -->
+
+    <div class="card">
+
+        <div class="card-title">
+
+            <span>🛠️</span>
+
+            <h2>
+                Debug Log
+            </h2>
+
+        </div>
+
+
+        <div
+            id="debug"
+            class="debug"
+        >
+รอการทดสอบ...
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+// ==========================================
+// CONFIG
+// ==========================================
+
+let SUPABASE_URL = "";
+
+let SUPABASE_KEY = "";
+
+
+// ==========================================
+// ELEMENTS
+// ==========================================
+
+const urlInput =
+    document.getElementById(
+        "supabaseUrl"
+    );
+
+const keyInput =
+    document.getElementById(
+        "apiKey"
+    );
+
+const statusBox =
+    document.getElementById(
+        "status"
+    );
+
+const debugBox =
+    document.getElementById(
+        "debug"
+    );
+
+const tableBody =
+    document.getElementById(
+        "studentTableBody"
+    );
+
+const connectionDot =
+    document.getElementById(
+        "connectionDot"
+    );
+
+const connectionText =
+    document.getElementById(
+        "connectionText"
+    );
+
+
+// ==========================================
+// LOG
+// ==========================================
+
+function log(title, data) {
+
+    let text =
+        `[${new Date().toLocaleTimeString()}] ${title}`;
+
+    if (
+        data !== undefined
+    ) {
+
+        if (
+            typeof data === "object"
+        ) {
+
+            text +=
+                "\n" +
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+        } else {
+
+            text +=
+                "\n" +
+                data;
+
+        }
+
+    }
+
+
+    debugBox.textContent +=
+        "\n" + text;
+
+    console.log(
+        title,
+        data
+    );
+
+}
+
+
+// ==========================================
+// CONFIG
+// ==========================================
+
+function getConfig() {
+
+    SUPABASE_URL =
+        urlInput.value
+            .trim()
+            .replace(
+                /\/$/,
+                ""
+            );
+
+    SUPABASE_KEY =
+        keyInput.value.trim();
+
+
+    if (!SUPABASE_URL) {
+
+        throw new Error(
+            "กรุณากรอก Supabase URL"
+        );
+
+    }
+
+
+    if (!SUPABASE_KEY) {
+
+        throw new Error(
+            "กรุณากรอก API Key"
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// TEST CONNECTION
+// ==========================================
+
+async function testConnection() {
+
+    try {
+
+        getConfig();
+
+
+        connectionText.textContent =
+            "กำลังเชื่อมต่อ...";
+
+        connectionDot.className =
+            "dot";
+
+
+        log(
+            "เริ่มทดสอบ Supabase"
+        );
+
+
+        const response =
+            await fetch(
+                `${SUPABASE_URL}/rest/v1/students?select=*&limit=1`,
+                {
+
+                    headers: {
+
+                        "apikey":
+                            SUPABASE_KEY,
+
+                        "Authorization":
+                            `Bearer ${SUPABASE_KEY}`
+
+                    }
+
+                }
+            );
+
+
+        const text =
+            await response.text();
+
+
+        log(
+            "HTTP STATUS",
+            response.status
+        );
+
+
+        log(
+            "RESPONSE",
+            text
+        );
+
+
+        if (
+            response.status === 200
+        ) {
+
+            connectionDot.className =
+                "dot online";
+
+            connectionText.textContent =
+                "🟢 เชื่อมต่อ Supabase สำเร็จ";
+
+
+            statusBox.className =
+                "status success";
+
+            statusBox.textContent =
+                "✅ API Key ใช้งานได้";
+
+
+            await loadStudents();
+
+            return;
+
+        }
+
+
+        connectionDot.className =
+            "dot error";
+
+        connectionText.textContent =
+            "🔴 เชื่อมต่อไม่สำเร็จ";
+
+
+        statusBox.className =
+            "status error";
+
+        statusBox.textContent =
+            `❌ HTTP ${response.status}`;
+
+    }
+
+    catch (error) {
+
+        connectionDot.className =
+            "dot error";
+
+        connectionText.textContent =
+            "🔴 เกิดข้อผิดพลาด";
+
+
+        statusBox.className =
+            "status error";
+
+        statusBox.textContent =
+            error.message;
+
+
+        log(
+            "ERROR",
+            error.message
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// SAVE STUDENT
+// ==========================================
+
+async function saveStudent() {
+
+    try {
+
+        getConfig();
+
+
+        const firstName =
+            document.getElementById(
+                "firstName"
+            ).value.trim();
+
+
+        const lastName =
+            document.getElementById(
+                "lastName"
+            ).value.trim();
+
+
+        const studentNumber =
+            document.getElementById(
+                "studentNumber"
+            ).value.trim();
+
+
+        const score =
+            document.getElementById(
+                "score"
+            ).value;
+
+
+        const grade =
+            document.getElementById(
+                "grade"
+            ).value;
+
+
+        // VALIDATE
+
+        if (!firstName) {
+
+            throw new Error(
+                "กรุณากรอกชื่อ"
+            );
+
+        }
+
+
+        if (!lastName) {
+
+            throw new Error(
+                "กรุณากรอกนามสกุล"
+            );
+
+        }
+
+
+        if (!studentNumber) {
+
+            throw new Error(
+                "กรุณากรอกเลขประจำตัว"
+            );
+
+        }
+
+
+        if (score === "") {
+
+            throw new Error(
+                "กรุณากรอกคะแนน"
+            );
+
+        }
+
+
+        if (!grade) {
+
+            throw new Error(
+                "กรุณาเลือกเกรด"
+            );
+
+        }
+
+
+        const student = {
+
+            first_name:
+                firstName,
+
+            last_name:
+                lastName,
+
+            student_number:
+                studentNumber,
+
+            score:
+                Number(score),
+
+            grade:
+                grade
+
+        };
+
+
+        statusBox.className =
+            "status info";
+
+        statusBox.textContent =
+            "⏳ กำลังบันทึกข้อมูล...";
+
+
+        log(
+            "กำลัง INSERT",
+            student
+        );
+
+
+        const response =
+            await fetch(
+                `${SUPABASE_URL}/rest/v1/students`,
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "apikey":
+                            SUPABASE_KEY,
+
+                        "Authorization":
+                            `Bearer ${SUPABASE_KEY}`,
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Prefer":
+                            "return=representation"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            student
+                        )
+
+                }
+            );
+
+
+        const text =
+            await response.text();
+
+
+        log(
+            "INSERT HTTP STATUS",
+            response.status
+        );
+
+
+        log(
+            "INSERT RESPONSE",
+            text
+        );
+
+
+        if (!response.ok) {
+
+            statusBox.className =
+                "status error";
+
+            statusBox.textContent =
+                "❌ บันทึกไม่สำเร็จ";
+
+            return;
+
+        }
+
+
+        statusBox.className =
+            "status success";
+
+        statusBox.textContent =
+            "✅ บันทึกข้อมูลนักเรียนสำเร็จ";
+
+
+        clearForm();
+
+
+        await loadStudents();
+
+    }
+
+    catch (error) {
+
+        statusBox.className =
+            "status error";
+
+        statusBox.textContent =
+            "❌ " +
+            error.message;
+
+
+        log(
+            "ERROR",
+            error.message
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// LOAD STUDENTS
+// ==========================================
+
+async function loadStudents() {
+
+    try {
+
+        getConfig();
+
+
+        const response =
+            await fetch(
+                `${SUPABASE_URL}/rest/v1/students?select=*&order=student_number.asc`,
+                {
+
+                    headers: {
+
+                        "apikey":
+                            SUPABASE_KEY,
+
+                        "Authorization":
+                            `Bearer ${SUPABASE_KEY}`
+
+                    }
+
+                }
+            );
+
+
+        const text =
+            await response.text();
+
+
+        log(
+            "LOAD STATUS",
+            response.status
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                text
+            );
+
+        }
+
+
+        const students =
+            JSON.parse(text);
+
+
+        renderStudents(
+            students
+        );
+
+    }
+
+    catch (error) {
+
+        tableBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="empty"
+                >
+                    ❌ ${escapeHtml(
+                        error.message
+                    )}
+                </td>
+
+            </tr>
+
+        `;
+
+        log(
+            "LOAD ERROR",
+            error.message
+        );
+
+    }
+
+}
+
+
+// ==========================================
+// RENDER TABLE
+// ==========================================
+
+function renderStudents(
+    students
+) {
+
+    if (
+        students.length === 0
+    ) {
+
+        tableBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="5"
+                    class="empty"
+                >
+                    📭 ยังไม่มีข้อมูลนักเรียน
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    tableBody.innerHTML =
+        students.map(
+            (
+                student,
+                index
+            ) => `
+
+                <tr>
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${escapeHtml(
+                                student.student_number
+                            )}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            student.first_name
+                        )}
+                        ${escapeHtml(
+                            student.last_name
+                        )}
+                    </td>
+
+                    <td>
+                        ${student.score}
+                    </td>
+
+                    <td>
+
+                        <span class="grade">
+
+                            ${escapeHtml(
+                                student.grade
+                            )}
+
+                        </span>
+
+                    </td>
+
+                </tr>
+
+            `
+        )
+        .join("");
+
+}
+
+
+// ==========================================
+// CLEAR FORM
+// ==========================================
+
+function clearForm() {
+
+    document.getElementById(
+        "firstName"
+    ).value = "";
+
+    document.getElementById(
+        "lastName"
+    ).value = "";
+
+    document.getElementById(
+        "studentNumber"
+    ).value = "";
+
+    document.getElementById(
+        "score"
+    ).value = "";
+
+    document.getElementById(
+        "grade"
+    ).value = "";
+
+}
+
+
+// ==========================================
+// ESCAPE HTML
+// ==========================================
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+// ==========================================
+// EVENTS
+// ==========================================
+
+document
+    .getElementById(
+        "testConnectionBtn"
+    )
+    .addEventListener(
+        "click",
+        testConnection
+    );
+
+
+document
+    .getElementById(
+        "saveBtn"
+    )
+    .addEventListener(
+        "click",
+        saveStudent
+    );
+
+
+document
+    .getElementById(
+        "loadBtn"
+    )
+    .addEventListener(
+        "click",
+        loadStudents
+    );
+
+
+document
+    .getElementById(
+        "clearBtn"
+    )
+    .addEventListener(
+        "click",
+        clearForm
+    );
+
+
+</script>
+
+
+</body>
+
+</html>
+```
