@@ -1,9 +1,6 @@
-```javascript
-console.log("SCRIPT.JS STARTED");
-
-// ========================================
-// SUPABASE CONFIG
-// ========================================
+// ==========================================
+// SUPABASE DEBUG TEST
+// ==========================================
 
 const SUPABASE_URL =
     "https://psfmvozmxfsmjgdhncep.supabase.co";
@@ -12,54 +9,207 @@ const SUPABASE_KEY =
     "sb_publishable_CgaBKkzw6pj9ulOqM2wbxQ_3nT1P6-y";
 
 
-// ========================================
-// ELEMENTS
-// ========================================
+const output =
+    document.getElementById("output");
 
-const output = document.getElementById("output");
-
-const saveBtn = document.getElementById("saveBtn");
-
-const refreshBtn = document.getElementById("refreshBtn");
+const debug =
+    document.getElementById("debug");
 
 
-// ========================================
-// CHECK PAGE
-// ========================================
+function log(message, data = null) {
 
-console.log("Output:", output);
-console.log("Save Button:", saveBtn);
-console.log("Refresh Button:", refreshBtn);
+    const time =
+        new Date().toLocaleTimeString();
+
+    let text =
+        `[${time}] ${message}`;
+
+    if (data !== null) {
+
+        if (typeof data === "object") {
+
+            text +=
+                "\n" +
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+        } else {
+
+            text +=
+                "\n" +
+                data;
+        }
+    }
+
+    debug.textContent +=
+        "\n" + text;
+
+    console.log(message, data);
+}
 
 
-// ========================================
-// SAVE STUDENT
-// ========================================
+function status(message) {
+
+    output.textContent =
+        message;
+}
+
+
+// ==========================================
+// 1. TEST JAVASCRIPT
+// ==========================================
+
+log(
+    "SCRIPT.JS เริ่มทำงาน"
+);
+
+
+// ==========================================
+// 2. TEST CONNECTION
+// ==========================================
+
+async function testConnection() {
+
+    status(
+        "กำลังทดสอบการเชื่อมต่อ..."
+    );
+
+    log(
+        "เริ่มทดสอบ Supabase"
+    );
+
+
+    log(
+        "SUPABASE URL:",
+        SUPABASE_URL
+    );
+
+
+    try {
+
+        const url =
+            `${SUPABASE_URL}/rest/v1/students?select=*`;
+
+        log(
+            "REQUEST URL:",
+            url
+        );
+
+
+        const response =
+            await fetch(
+                url,
+                {
+
+                    method: "GET",
+
+                    headers: {
+
+                        "apikey":
+                            SUPABASE_KEY,
+
+                        "Authorization":
+                            `Bearer ${SUPABASE_KEY}`
+                    }
+                }
+            );
+
+
+        const text =
+            await response.text();
+
+
+        log(
+            "HTTP STATUS:",
+            response.status
+        );
+
+
+        log(
+            "RESPONSE:",
+            text
+        );
+
+
+        if (!response.ok) {
+
+            status(
+                "❌ เชื่อมต่อไม่สำเร็จ"
+            );
+
+            log(
+                "ERROR จาก Supabase"
+            );
+
+            return;
+        }
+
+
+        status(
+            "✅ เชื่อมต่อ Supabase สำเร็จ"
+        );
+
+
+        log(
+            "SUCCESS: SELECT ทำงานได้"
+        );
+
+    }
+
+    catch (error) {
+
+        status(
+            "❌ JavaScript / Network Error"
+        );
+
+        log(
+            "ERROR:",
+            error.message
+        );
+    }
+}
+
+
+// ==========================================
+// 3. TEST INSERT
+// ==========================================
 
 async function saveStudent() {
 
-    console.log("SAVE BUTTON CLICKED");
+    status(
+        "กำลังทดสอบ INSERT..."
+    );
 
-    output.textContent =
-        "กำลังบันทึกข้อมูลไปยัง Supabase...";
+
+    log(
+        "เริ่ม INSERT"
+    );
 
 
-    // ข้อมูลทดสอบ
     const student = {
 
-        first_name: "ทดสอบ",
+        first_name:
+            "Debug",
 
-        last_name: "Supabase",
+        last_name:
+            "Test",
 
-        student_number: "TEST001",
+        student_number:
+            "DEBUG-" +
+            Date.now(),
 
-        score: 99,
+        score:
+            99,
 
-        grade: "A"
+        grade:
+            "A"
     };
 
 
-    console.log(
+    log(
         "ข้อมูลที่จะส่ง:",
         student
     );
@@ -67,251 +217,140 @@ async function saveStudent() {
 
     try {
 
-        const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/students`,
-            {
+        const url =
+            `${SUPABASE_URL}/rest/v1/students`;
 
-                method: "POST",
 
-                headers: {
-
-                    "apikey":
-                        SUPABASE_KEY,
-
-                    "Authorization":
-                        `Bearer ${SUPABASE_KEY}`,
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Prefer":
-                        "return=representation"
-                },
-
-                body:
-                    JSON.stringify(student)
-            }
+        log(
+            "POST URL:",
+            url
         );
+
+
+        const response =
+            await fetch(
+                url,
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "apikey":
+                            SUPABASE_KEY,
+
+                        "Authorization":
+                            `Bearer ${SUPABASE_KEY}`,
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Prefer":
+                            "return=representation"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            student
+                        )
+                }
+            );
 
 
         const text =
             await response.text();
 
 
-        console.log(
-            "HTTP STATUS:",
+        log(
+            "INSERT HTTP STATUS:",
             response.status
         );
 
 
-        console.log(
-            "SUPABASE RESPONSE:",
+        log(
+            "INSERT RESPONSE:",
             text
         );
 
 
-        // ========================================
-        // ERROR
-        // ========================================
-
         if (!response.ok) {
 
-            output.textContent =
-                "❌ บันทึกไม่สำเร็จ\n\n" +
-
-                "HTTP STATUS: " +
-                response.status +
-
-                "\n\n" +
-
-                text;
+            status(
+                "❌ INSERT ไม่สำเร็จ"
+            );
 
             return;
         }
 
 
-        // ========================================
-        // SUCCESS
-        // ========================================
-
-        output.textContent =
-            "✅ บันทึกข้อมูลสำเร็จ\n\n" +
-
-            "HTTP STATUS: " +
-            response.status +
-
-            "\n\n" +
-
-            "ข้อมูลจาก Supabase:\n" +
-
-            text;
+        status(
+            "✅ INSERT สำเร็จ"
+        );
 
 
-        // โหลดข้อมูลใหม่
-        await loadStudents();
+        log(
+            "INSERT สำเร็จ!"
+        );
+
+
+        // โหลดข้อมูลหลัง INSERT
+
+        await testConnection();
 
     }
 
     catch (error) {
 
-        console.error(
-            "SAVE ERROR:",
-            error
+        status(
+            "❌ Network Error"
         );
 
-
-        output.textContent =
-            "❌ เกิดข้อผิดพลาด\n\n" +
-
-            error.message;
+        log(
+            "INSERT ERROR:",
+            error.message
+        );
     }
 }
 
 
-// ========================================
-// LOAD STUDENTS
-// ========================================
+// ==========================================
+// 4. LOAD DATA
+// ==========================================
 
 async function loadStudents() {
 
-    console.log("LOAD BUTTON CLICKED");
+    log(
+        "เริ่ม LOAD STUDENTS"
+    );
 
-    output.textContent =
-        "กำลังโหลดข้อมูลจาก Supabase...";
+    await testConnection();
 
-
-    try {
-
-        const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/students?select=*`,
-            {
-
-                method: "GET",
-
-                headers: {
-
-                    "apikey":
-                        SUPABASE_KEY,
-
-                    "Authorization":
-                        `Bearer ${SUPABASE_KEY}`
-                }
-            }
-        );
-
-
-        const text =
-            await response.text();
-
-
-        console.log(
-            "LOAD HTTP STATUS:",
-            response.status
-        );
-
-
-        console.log(
-            "LOAD RESPONSE:",
-            text
-        );
-
-
-        if (!response.ok) {
-
-            output.textContent =
-                "❌ โหลดข้อมูลไม่สำเร็จ\n\n" +
-
-                "HTTP STATUS: " +
-                response.status +
-
-                "\n\n" +
-
-                text;
-
-            return;
-        }
-
-
-        const students =
-            JSON.parse(text);
-
-
-        if (students.length === 0) {
-
-            output.textContent =
-                "เชื่อมต่อ Supabase สำเร็จ\n\n" +
-
-                "ยังไม่มีข้อมูลในตาราง students";
-
-            return;
-        }
-
-
-        output.textContent =
-            "✅ ข้อมูลจาก Supabase\n\n" +
-
-            JSON.stringify(
-                students,
-                null,
-                2
-            );
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "LOAD ERROR:",
-            error
-        );
-
-
-        output.textContent =
-            "❌ เกิดข้อผิดพลาด\n\n" +
-
-            error.message;
-    }
 }
 
 
-// ========================================
-// BUTTON EVENTS
-// ========================================
+// ==========================================
+// BUTTONS
+// ==========================================
 
-if (saveBtn) {
+document
+    .getElementById("testBtn")
+    .addEventListener(
+        "click",
+        testConnection
+    );
 
-    saveBtn.addEventListener(
+
+document
+    .getElementById("saveBtn")
+    .addEventListener(
         "click",
         saveStudent
     );
 
-}
 
-
-if (refreshBtn) {
-
-    refreshBtn.addEventListener(
+document
+    .getElementById("refreshBtn")
+    .addEventListener(
         "click",
         loadStudents
     );
-
-}
-
-
-// ========================================
-// INITIAL LOAD
-// ========================================
-
-loadStudents();
-
-
-// ========================================
-// GLOBAL FUNCTION
-// ========================================
-
-window.loadStudents =
-    loadStudents;
-
-window.saveStudent =
-    saveStudent;
-```
