@@ -502,10 +502,32 @@ els.body.addEventListener('click', async (e)=>{
   }
   if(delId){
     if(!confirm('ยืนยันการลบข้อมูลนักเรียนคนนี้?')) return;
-    const { error } = await supabaseClient.from(TABLE).delete().eq('id', delId);
-    if(error){ toast('ลบไม่สำเร็จ: ' + error.message, true); return; }
+
+    // ลบจาก Supabase และขอข้อมูลแถวที่ถูกลบกลับมา
+    // ถ้า RLS ไม่อนุญาต DELETE, result จะว่างโดยไม่มี error
+    const { data: deletedRows, error } = await supabaseClient
+      .from(TABLE)
+      .delete()
+      .eq('id', delId)
+      .select('id');
+
+    if(error){
+      toast('ลบไม่สำเร็จ: ' + error.message, true);
+      console.error('DELETE error:', error);
+      return;
+    }
+
+    if(!deletedRows || deletedRows.length === 0){
+      toast('ลบไม่สำเร็จ: Supabase ไม่อนุญาตให้ลบข้อมูล (ตรวจสอบ RLS Policy)', true);
+      console.error('DELETE returned 0 rows. ตรวจสอบ RLS policy สำหรับ DELETE');
+      return;
+    }
+
+    // ลบออกจากหน้าจอทันที แล้วโหลดข้อมูลใหม่จากฐานข้อมูล
+    students = students.filter(s => String(s.id) !== String(delId));
+    renderTabs();
+    render();
     toast('ลบข้อมูลแล้ว');
-    await fetchStudents();
   }
 });
 
@@ -547,6 +569,13 @@ create policy "allow all for anon" on students
   for all
   using (true)
   with check (true);
+
+-- ถ้าใช้ Policy แยกสิทธิ์ ให้แน่ใจว่า DELETE อนุญาตด้วย
+-- (ถ้ามี policy "allow all for anon" อยู่แล้ว ส่วนนี้ไม่จำเป็น)
+create policy "allow delete for anon" on students
+  for delete
+  to anon
+  using (true);
 
 หากต้องการความปลอดภัยมากขึ้น ให้เปลี่ยนไปใช้ Supabase Auth
 และจำกัดนโยบายเฉพาะผู้ใช้ที่ล็อกอินแล้วแทน
