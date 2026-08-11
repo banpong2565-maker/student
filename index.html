@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ทะเบียนนักเรียน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --paper:#FBF6EC;
+    --paper-line:#E4D9C0;
+    --ink:#26301F;
+    --ink-soft:#5B6350;
+    --pine:#2F4F3D;
+    --pine-deep:#1E3529;
+    --rust:#B33A3A;
+    --gold:#C9962B;
+    --card:#FFFDF8;
+    --danger:#B33A3A;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(var(--paper) 0 35px, var(--paper-line) 35px 36px),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Sarabun',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 80px;}
+
+  /* Header / ledger cover */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:3px solid var(--pine);
+    padding-bottom:16px;margin-bottom:24px;
+    flex-wrap:wrap;gap:12px;
+  }
+  header .title-block{display:flex;align-items:center;gap:14px;}
+  .seal{
+    width:52px;height:52px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold), #a97a1c 70%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Prompt',sans-serif;font-weight:700;color:#fff;font-size:20px;
+    box-shadow:0 2px 6px rgba(0,0,0,.25) inset, 0 2px 4px rgba(0,0,0,.15);
+    flex-shrink:0;
+  }
+  h1{font-family:'Prompt',sans-serif;font-size:26px;margin:0;color:var(--pine-deep);}
+  header p{margin:2px 0 0;color:var(--ink-soft);font-size:14px;}
+  .conn-status{font-size:13px;display:flex;align-items:center;gap:6px;color:var(--ink-soft);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#999;}
+  .dot.ok{background:#3C8B5C;}
+  .dot.bad{background:var(--rust);}
+
+  /* Class tabs like ledger index tabs */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+  .tab{
+    font-family:'Prompt',sans-serif;font-size:13px;font-weight:600;
+    padding:7px 14px;border-radius:999px;border:1.5px solid var(--pine);
+    background:transparent;color:var(--pine-deep);cursor:pointer;
+    transition:.15s;
+  }
+  .tab:hover{background:#e7ded0;}
+  .tab.active{background:var(--pine);color:#fff;}
+
+  .toolbar{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+  .search{
+    flex:1;min-width:200px;
+    padding:10px 14px;border-radius:var(--radius);border:1.5px solid var(--paper-line);
+    background:var(--card);font-size:14px;font-family:'Sarabun',sans-serif;
+  }
+  .search:focus{outline:none;border-color:var(--pine);}
+  button.primary{
+    font-family:'Prompt',sans-serif;font-weight:600;font-size:14px;
+    background:var(--pine);color:#fff;border:none;padding:11px 20px;
+    border-radius:var(--radius);cursor:pointer;transition:.15s;
+  }
+  button.primary:hover{background:var(--pine-deep);}
+
+  /* Card / roster */
+  .roster{background:var(--card);border:1px solid var(--paper-line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;font-family:'Prompt',sans-serif;font-size:12px;letter-spacing:.03em;
+    color:var(--ink-soft);text-transform:uppercase;padding:12px 16px;
+    border-bottom:2px solid var(--pine);background:#F3ECDC;
+  }
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--paper-line);font-size:14px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAF4E6;}
+  .student-cell{display:flex;align-items:center;gap:10px;}
+  .badge{
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Prompt',sans-serif;font-weight:700;font-size:13px;color:#fff;
+  }
+  .name{font-weight:600;color:var(--ink);}
+  .sub{font-size:12px;color:var(--ink-soft);}
+  .actions{display:flex;gap:6px;}
+  .icon-btn{
+    border:1px solid var(--paper-line);background:#fff;border-radius:7px;
+    width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;font-size:14px;color:var(--ink-soft);transition:.15s;
+  }
+  .icon-btn:hover{border-color:var(--pine);color:var(--pine);}
+  .icon-btn.del:hover{border-color:var(--rust);color:var(--rust);}
+  .empty{padding:48px 20px;text-align:center;color:var(--ink-soft);font-size:14px;}
+  .empty b{display:block;font-family:'Prompt',sans-serif;color:var(--pine-deep);font-size:16px;margin-bottom:6px;}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(31,41,32,.45);
+    display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--card);border-radius:14px;max-width:480px;width:100%;
+    padding:26px 26px 22px;box-shadow:0 12px 40px rgba(0,0,0,.25);
+    max-height:90vh;overflow-y:auto;
+  }
+  .modal h2{font-family:'Prompt',sans-serif;font-size:19px;margin:0 0 18px;color:var(--pine-deep);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid var(--paper-line);
+    font-family:'Sarabun',sans-serif;font-size:14px;background:#fff;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--pine);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+  button.ghost{
+    background:transparent;border:1.5px solid var(--paper-line);color:var(--ink-soft);
+    padding:10px 16px;border-radius:var(--radius);font-family:'Prompt',sans-serif;font-weight:600;font-size:14px;cursor:pointer;
+  }
+  button.ghost:hover{border-color:var(--ink-soft);}
+
+  /* Setup panel */
+  .setup{
+    background:#FFF9EC;border:1.5px dashed var(--gold);border-radius:12px;
+    padding:16px 20px;margin-bottom:22px;font-size:13.5px;color:var(--ink);
+  }
+  .setup b{font-family:'Prompt',sans-serif;color:var(--pine-deep);}
+  .setup code{background:#F3ECDC;padding:1px 6px;border-radius:4px;font-size:12.5px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--pine-deep);color:#fff;padding:11px 20px;border-radius:999px;
+    font-size:13.5px;font-family:'Sarabun',sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.25);
+    opacity:0;pointer-events:none;transition:.25s;z-index:60;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.err{background:var(--rust);}
+
+  @media (max-width:640px){
+    thead{display:none;}
+    table, tbody, tr, td{display:block;width:100%;}
+    tbody tr{padding:12px 14px;border-bottom:1px solid var(--paper-line);}
+    tbody td{padding:4px 0;border:none;}
+    .actions{margin-top:8px;}
+    .row2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <div class="seal">น</div>
+      <div>
+        <h1>ทะเบียนนักเรียน</h1>
+        <p>บันทึกชื่อ เลขประจำตัว ระดับชั้น และคะแนนนักเรียน เก็บไว้บน Supabase</p>
+      </div>
+    </div>
+    <div class="conn-status"><span class="dot" id="connDot"></span><span id="connText">กำลังเชื่อมต่อ...</span></div>
+  </header>
+
+  <div class="setup" id="setupPanel">
+    <b>ตั้งค่าก่อนใช้งาน:</b> เปิดไฟล์นี้ด้วยโปรแกรมแก้ไขข้อความ แล้วแก้ค่า <code>SUPABASE_URL</code> และ <code>SUPABASE_ANON_KEY</code> ที่ด้านล่างของโค้ด (แถวที่มี <code>const SUPABASE_URL</code>) ให้เป็นค่าจากโปรเจกต์ Supabase ของคุณ ไฟล์นี้ถูกปรับให้ตรงกับตาราง <code>students</code> ที่มีคอลัมน์ <code>id, first_name, last_name, student_number, score, grade</code> อยู่แล้ว
+  </div>
+
+  <div class="tabs" id="classTabs"></div>
+
+  <div class="toolbar">
+    <input type="text" class="search" id="searchInput" placeholder="ค้นหาชื่อ หรือ เลขประจำตัว...">
+    <button class="primary" id="addBtn">+ เพิ่มนักเรียน</button>
+  </div>
+
+  <div class="roster">
+    <table id="rosterTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>นักเรียน</th>
+          <th>เลขประจำตัว</th>
+          <th>ระดับชั้น</th>
+          <th>คะแนน</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rosterBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState">
+      <b>ยังไม่มีข้อมูลนักเรียน</b>
+      กด "เพิ่มนักเรียน" เพื่อเริ่มบันทึกข้อมูล
+    </div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">เพิ่มนักเรียน</h2>
+    <form id="studentForm">
+      <input type="hidden" id="studentId">
+      <div class="row2">
+        <div class="field">
+          <label>ชื่อ *</label>
+          <input type="text" id="firstName" required>
+        </div>
+        <div class="field">
+          <label>นามสกุล *</label>
+          <input type="text" id="lastName" required>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>เลขประจำตัวนักเรียน</label>
+          <input type="text" id="studentNumber">
+        </div>
+        <div class="field">
+          <label>ระดับชั้น</label>
+          <input type="text" id="grade" placeholder="เช่น ป.6/1">
+        </div>
+      </div>
+      <div class="field">
+        <label>คะแนน</label>
+        <input type="number" id="score" step="any">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="ghost" id="cancelBtn">ยกเลิก</button>
+        <button type="submit" class="primary">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====================== ตั้งค่า Supabase ====================== */
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
+/* ================================================================ */
+
+const TABLE = "students";
+let supabase = null;
+let students = [];
+let activeClass = "ทั้งหมด";
+let editingId = null;
+
+const els = {
+  connDot: document.getElementById('connDot'),
+  connText: document.getElementById('connText'),
+  setupPanel: document.getElementById('setupPanel'),
+  classTabs: document.getElementById('classTabs'),
+  search: document.getElementById('searchInput'),
+  addBtn: document.getElementById('addBtn'),
+  table: document.getElementById('rosterTable'),
+  body: document.getElementById('rosterBody'),
+  empty: document.getElementById('emptyState'),
+  overlay: document.getElementById('overlay'),
+  modalTitle: document.getElementById('modalTitle'),
+  form: document.getElementById('studentForm'),
+  cancelBtn: document.getElementById('cancelBtn'),
+  toast: document.getElementById('toast'),
+};
+
+function toast(msg, isErr){
+  els.toast.textContent = msg;
+  els.toast.classList.toggle('err', !!isErr);
+  els.toast.classList.add('show');
+  setTimeout(()=>els.toast.classList.remove('show'), 2600);
+}
+
+const PALETTE = ['#2F4F3D','#B33A3A','#C9962B','#3C6E8B','#7A4F9E','#4A7A3C'];
+function colorFor(str){
+  let h=0; for(const c of (str||'?')) h = (h*31 + c.charCodeAt(0)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+}
+function initials(name){
+  if(!name) return '?';
+  const parts = name.trim().split(' ');
+  return parts[0] ? parts[0][0] : '?';
+}
+
+async function init(){
+  if(SUPABASE_URL.includes('YOUR-PROJECT') || SUPABASE_ANON_KEY.includes('YOUR-ANON')){
+    els.connDot.classList.add('bad');
+    els.connText.textContent = 'ยังไม่ได้ตั้งค่า Supabase';
+    els.setupPanel.style.display = 'block';
+    return;
+  }
+  els.setupPanel.style.display = 'none';
+  try{
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    await fetchStudents();
+    els.connDot.classList.add('ok');
+    els.connText.textContent = 'เชื่อมต่อแล้ว';
+  }catch(e){
+    els.connDot.classList.add('bad');
+    els.connText.textContent = 'เชื่อมต่อไม่สำเร็จ';
+    toast('เชื่อมต่อ Supabase ไม่สำเร็จ: ' + e.message, true);
+  }
+}
+
+async function fetchStudents(){
+  const { data, error } = await supabase.from(TABLE).select('*').order('last_name', {ascending:true});
+  if(error){ toast('โหลดข้อมูลไม่สำเร็จ: ' + error.message, true); return; }
+  students = data || [];
+  renderTabs();
+  render();
+}
+
+function renderTabs(){
+  const classes = ['ทั้งหมด', ...new Set(students.map(s=>s.grade).filter(Boolean))];
+  els.classTabs.innerHTML = '';
+  classes.forEach(c=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (c===activeClass ? ' active':'');
+    btn.textContent = c;
+    btn.onclick = ()=>{ activeClass = c; renderTabs(); render(); };
+    els.classTabs.appendChild(btn);
+  });
+}
+
+function render(){
+  const q = els.search.value.trim().toLowerCase();
+  let list = students;
+  if(activeClass !== 'ทั้งหมด') list = list.filter(s=>s.grade === activeClass);
+  if(q) list = list.filter(s =>
+    (s.first_name||'').toLowerCase().includes(q) ||
+    (s.last_name||'').toLowerCase().includes(q) ||
+    (s.student_number||'').toLowerCase().includes(q)
+  );
+
+  if(list.length === 0){
+    els.table.style.display = 'none';
+    els.empty.style.display = 'block';
+    return;
+  }
+  els.table.style.display = 'table';
+  els.empty.style.display = 'none';
+
+  els.body.innerHTML = '';
+  list.forEach(s=>{
+    const fullName = `${s.first_name||''} ${s.last_name||''}`.trim();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="student-cell">
+          <div class="badge" style="background:${colorFor(fullName)}">${initials(fullName)}</div>
+          <div>
+            <div class="name">${escapeHtml(fullName||'-')}</div>
+          </div>
+        </div>
+      </td>
+      <td>${escapeHtml(s.student_number || '-')}</td>
+      <td>${escapeHtml(s.grade || '-')}</td>
+      <td>${s.score !== null && s.score !== undefined ? escapeHtml(String(s.score)) : '-'}</td>
+      <td>
+        <div class="actions">
+          <button class="icon-btn" data-edit="${s.id}" title="แก้ไข">✎</button>
+          <button class="icon-btn del" data-del="${s.id}" title="ลบ">🗑</button>
+        </div>
+      </td>
+    `;
+    els.body.appendChild(tr);
+  });
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function openModal(student){
+  editingId = student ? student.id : null;
+  els.modalTitle.textContent = student ? 'แก้ไขข้อมูลนักเรียน' : 'เพิ่มนักเรียน';
+  document.getElementById('studentId').value = student?.id || '';
+  document.getElementById('firstName').value = student?.first_name || '';
+  document.getElementById('lastName').value = student?.last_name || '';
+  document.getElementById('studentNumber').value = student?.student_number || '';
+  document.getElementById('grade').value = student?.grade || '';
+  document.getElementById('score').value = (student?.score ?? '');
+  els.overlay.classList.add('show');
+}
+function closeModal(){ els.overlay.classList.remove('show'); }
+
+els.addBtn.onclick = ()=> openModal(null);
+els.cancelBtn.onclick = closeModal;
+els.overlay.onclick = (e)=>{ if(e.target === els.overlay) closeModal(); };
+els.search.oninput = render;
+
+els.form.onsubmit = async (e)=>{
+  e.preventDefault();
+  if(!supabase){ toast('ยังไม่ได้เชื่อมต่อ Supabase', true); return; }
+  const scoreVal = document.getElementById('score').value;
+  const payload = {
+    first_name: document.getElementById('firstName').value.trim(),
+    last_name: document.getElementById('lastName').value.trim(),
+    student_number: document.getElementById('studentNumber').value.trim() || null,
+    grade: document.getElementById('grade').value.trim() || null,
+    score: scoreVal === '' ? null : Number(scoreVal),
+  };
+  let error;
+  if(editingId){
+    ({ error } = await supabase.from(TABLE).update(payload).eq('id', editingId));
+  } else {
+    ({ error } = await supabase.from(TABLE).insert(payload));
+  }
+  if(error){ toast('บันทึกไม่สำเร็จ: ' + error.message, true); return; }
+  toast('บันทึกข้อมูลเรียบร้อย');
+  closeModal();
+  await fetchStudents();
+};
+
+els.body.addEventListener('click', async (e)=>{
+  const editId = e.target.closest('[data-edit]')?.dataset.edit;
+  const delId = e.target.closest('[data-del]')?.dataset.del;
+  if(editId){
+    const s = students.find(x=>String(x.id)===String(editId));
+    openModal(s);
+  }
+  if(delId){
+    if(!confirm('ยืนยันการลบข้อมูลนักเรียนคนนี้?')) return;
+    const { error } = await supabase.from(TABLE).delete().eq('id', delId);
+    if(error){ toast('ลบไม่สำเร็จ: ' + error.message, true); return; }
+    toast('ลบข้อมูลแล้ว');
+    await fetchStudents();
+  }
+});
+
+init();
+</script>
+
+<!--
+====================================================================
+SQL สำหรับสร้างตารางใน Supabase (วางใน SQL Editor ของโปรเจกต์)
+====================================================================
+
+create table students (
+  id uuid primary key default gen_random_uuid(),
+  first_name text,
+  last_name text,
+  student_number text,
+  score numeric,
+  grade text
+);
+
+-- เปิด Row Level Security
+alter table students enable row level security;
+
+-- นโยบายแบบง่าย: อนุญาตให้ทุกคนที่ถือ anon key อ่าน/เขียนได้
+-- (เหมาะสำหรับทดลองใช้งานภายใน/ต้นแบบเท่านั้น ไม่ควรใช้กับข้อมูลจริงที่ต้องปกปิด)
+create policy "allow all for anon" on students
+  for all
+  using (true)
+  with check (true);
+
+หากต้องการความปลอดภัยมากขึ้น ให้เปลี่ยนไปใช้ Supabase Auth
+และจำกัดนโยบายเฉพาะผู้ใช้ที่ล็อกอินแล้วแทน
+====================================================================
+-->
+</body>
+</html>
