@@ -253,12 +253,12 @@
 
 <script>
 /* ====================== ตั้งค่า Supabase ====================== */
-const SUPABASE_URL = "https://psfmvozmxfsmjgdhncep.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://psfmvozmxfsmjgdhncep.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_CgaBKkzw6pj9ulOqM2wbxQ_3nT1P6-y";
 /* ================================================================ */
 
 const TABLE = "students";
-let supabase = null;
+let supabaseClient = null;
 let students = [];
 let activeClass = "ทั้งหมด";
 let editingId = null;
@@ -307,7 +307,7 @@ async function init(){
   }
   els.setupPanel.style.display = 'none';
   try{
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await fetchStudents();
     els.connDot.classList.add('ok');
     els.connText.textContent = 'เชื่อมต่อแล้ว';
@@ -319,8 +319,8 @@ async function init(){
 }
 
 async function fetchStudents(){
-  const { data, error } = await supabase.from(TABLE).select('*').order('last_name', {ascending:true});
-  if(error){ toast('โหลดข้อมูลไม่สำเร็จ: ' + error.message, true); return; }
+  const { data, error } = await supabaseClient.from(TABLE).select('*').order('last_name', {ascending:true});
+  if(error){ toast('โหลดข้อมูลไม่สำเร็จ: ' + error.message, true); throw error; }
   students = data || [];
   renderTabs();
   render();
@@ -407,7 +407,7 @@ els.search.oninput = render;
 
 els.form.onsubmit = async (e)=>{
   e.preventDefault();
-  if(!supabase){ toast('ยังไม่ได้เชื่อมต่อ Supabase', true); return; }
+  if(!supabaseClient){ toast('ยังไม่ได้เชื่อมต่อ Supabase', true); return; }
   const scoreVal = document.getElementById('score').value;
   const payload = {
     first_name: document.getElementById('firstName').value.trim(),
@@ -418,9 +418,9 @@ els.form.onsubmit = async (e)=>{
   };
   let error;
   if(editingId){
-    ({ error } = await supabase.from(TABLE).update(payload).eq('id', editingId));
+    ({ error } = await supabaseClient.from(TABLE).update(payload).eq('id', editingId));
   } else {
-    ({ error } = await supabase.from(TABLE).insert(payload));
+    ({ error } = await supabaseClient.from(TABLE).insert(payload));
   }
   if(error){ toast('บันทึกไม่สำเร็จ: ' + error.message, true); return; }
   toast('บันทึกข้อมูลเรียบร้อย');
@@ -437,11 +437,17 @@ els.body.addEventListener('click', async (e)=>{
   }
   if(delId){
     if(!confirm('ยืนยันการลบข้อมูลนักเรียนคนนี้?')) return;
-    const { error } = await supabase.from(TABLE).delete().eq('id', delId);
+    const { error } = await supabaseClient.from(TABLE).delete().eq('id', delId);
     if(error){ toast('ลบไม่สำเร็จ: ' + error.message, true); return; }
     toast('ลบข้อมูลแล้ว');
     await fetchStudents();
   }
+});
+
+window.addEventListener('error', ()=>{
+  els.connDot.classList.remove('ok');
+  els.connDot.classList.add('bad');
+  els.connText.textContent = 'เกิดข้อผิดพลาด (ดู Console)';
 });
 
 init();
