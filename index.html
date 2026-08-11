@@ -132,6 +132,11 @@
   }
   .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--pine);}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .extra-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;}
+  .extra-row input{padding:8px 10px;border-radius:7px;border:1.5px solid var(--paper-line);font-size:13px;font-family:'Sarabun',sans-serif;}
+  .extra-row input:focus{outline:none;border-color:var(--pine);}
+  .extra-row button{border:1px solid var(--paper-line);background:#fff;border-radius:7px;width:32px;color:var(--rust);cursor:pointer;font-size:14px;}
+  .extra-row button:hover{border-color:var(--rust);}
   .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
   button.ghost{
     background:transparent;border:1.5px solid var(--paper-line);color:var(--ink-soft);
@@ -197,6 +202,7 @@
         <tr>
           <th>นักเรียน</th>
           <th>เลขประจำตัว</th>
+          <th>เลขบัตรประชาชน</th>
           <th>ระดับชั้น</th>
           <th>คะแนน</th>
           <th></th>
@@ -233,13 +239,24 @@
           <input type="text" id="studentNumber">
         </div>
         <div class="field">
+          <label>เลขบัตรประชาชน</label>
+          <input type="text" id="nationalId" inputmode="numeric" maxlength="13" pattern="[0-9]{13}" placeholder="13 หลัก">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
           <label>ระดับชั้น</label>
           <input type="text" id="grade" placeholder="เช่น ป.6/1">
         </div>
+        <div class="field">
+          <label>คะแนน</label>
+          <input type="number" id="score" step="any">
+        </div>
       </div>
       <div class="field">
-        <label>คะแนน</label>
-        <input type="number" id="score" step="any">
+        <label>ข้อมูลเพิ่มเติม <span style="font-weight:400;color:var(--ink-soft);">(เพิ่มได้เอง ไม่ต้องแก้ฐานข้อมูล)</span></label>
+        <div id="extraRows"></div>
+        <button type="button" class="ghost" id="addExtraRow" style="margin-top:4px;padding:7px 14px;font-size:13px;">+ เพิ่มรายการ</button>
       </div>
       <div class="modal-actions">
         <button type="button" class="ghost" id="cancelBtn">ยกเลิก</button>
@@ -277,6 +294,8 @@ const els = {
   modalTitle: document.getElementById('modalTitle'),
   form: document.getElementById('studentForm'),
   cancelBtn: document.getElementById('cancelBtn'),
+  extraRows: document.getElementById('extraRows'),
+  addExtraRow: document.getElementById('addExtraRow'),
   toast: document.getElementById('toast'),
 };
 
@@ -345,7 +364,8 @@ function render(){
   if(q) list = list.filter(s =>
     (s.first_name||'').toLowerCase().includes(q) ||
     (s.last_name||'').toLowerCase().includes(q) ||
-    (s.student_number||'').toLowerCase().includes(q)
+    (s.student_number||'').toLowerCase().includes(q) ||
+    (s.national_id||'').toLowerCase().includes(q)
   );
 
   if(list.length === 0){
@@ -370,6 +390,7 @@ function render(){
         </div>
       </td>
       <td>${escapeHtml(s.student_number || '-')}</td>
+      <td>${s.national_id ? escapeHtml('••••••••'+String(s.national_id).slice(-4)) : '-'}</td>
       <td>${escapeHtml(s.grade || '-')}</td>
       <td>${s.score !== null && s.score !== undefined ? escapeHtml(String(s.score)) : '-'}</td>
       <td>
@@ -387,6 +408,28 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
+function addExtraRowEl(key, value){
+  const row = document.createElement('div');
+  row.className = 'extra-row';
+  row.innerHTML = `
+    <input type="text" placeholder="ชื่อรายการ เช่น กิจกรรมพิเศษ" class="extra-key" value="${escapeHtml(key||'')}">
+    <input type="text" placeholder="ค่า เช่น ฟุตบอล" class="extra-val" value="${escapeHtml(value||'')}">
+    <button type="button" title="ลบ">✕</button>
+  `;
+  row.querySelector('button').onclick = ()=> row.remove();
+  els.extraRows.appendChild(row);
+}
+function readExtraData(){
+  const obj = {};
+  els.extraRows.querySelectorAll('.extra-row').forEach(row=>{
+    const k = row.querySelector('.extra-key').value.trim();
+    const v = row.querySelector('.extra-val').value.trim();
+    if(k) obj[k] = v;
+  });
+  return obj;
+}
+els.addExtraRow.onclick = ()=> addExtraRowEl('', '');
+
 function openModal(student){
   editingId = student ? student.id : null;
   els.modalTitle.textContent = student ? 'แก้ไขข้อมูลนักเรียน' : 'เพิ่มนักเรียน';
@@ -394,8 +437,14 @@ function openModal(student){
   document.getElementById('firstName').value = student?.first_name || '';
   document.getElementById('lastName').value = student?.last_name || '';
   document.getElementById('studentNumber').value = student?.student_number || '';
+  document.getElementById('nationalId').value = student?.national_id || '';
   document.getElementById('grade').value = student?.grade || '';
   document.getElementById('score').value = (student?.score ?? '');
+  els.extraRows.innerHTML = '';
+  const extra = student?.extra_data || {};
+  const keys = Object.keys(extra);
+  if(keys.length === 0){ addExtraRowEl('',''); }
+  else{ keys.forEach(k => addExtraRowEl(k, extra[k])); }
   els.overlay.classList.add('show');
 }
 function closeModal(){ els.overlay.classList.remove('show'); }
@@ -413,8 +462,10 @@ els.form.onsubmit = async (e)=>{
     first_name: document.getElementById('firstName').value.trim(),
     last_name: document.getElementById('lastName').value.trim(),
     student_number: document.getElementById('studentNumber').value.trim() || null,
+    national_id: document.getElementById('nationalId').value.trim() || null,
     grade: document.getElementById('grade').value.trim() || null,
     score: scoreVal === '' ? null : Number(scoreVal),
+    extra_data: readExtraData(),
   };
   let error;
   if(editingId){
@@ -463,9 +514,15 @@ create table students (
   first_name text,
   last_name text,
   student_number text,
+  national_id text,
   score numeric,
-  grade text
+  grade text,
+  extra_data jsonb default '{}'::jsonb
 );
+
+-- ถ้าตาราง students มีอยู่แล้ว ให้เพิ่มคอลัมน์นี้แทน:
+-- alter table students add column national_id text;
+-- alter table students add column extra_data jsonb default '{}'::jsonb;
 
 -- เปิด Row Level Security
 alter table students enable row level security;
