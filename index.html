@@ -101,6 +101,12 @@
   }
   .name{font-weight:600;color:var(--ink);}
   .sub{font-size:12px;color:var(--ink-soft);}
+  .extra-tags{display:flex;flex-wrap:wrap;gap:5px;max-width:220px;}
+  .extra-tag{
+    font-size:11.5px;background:#F0EAD8;border:1px solid var(--paper-line);
+    border-radius:999px;padding:2px 9px;color:var(--ink);white-space:nowrap;
+  }
+  .extra-tag b{color:var(--pine-deep);font-weight:600;}
   .actions{display:flex;gap:6px;}
   .icon-btn{
     border:1px solid var(--paper-line);background:#fff;border-radius:7px;
@@ -205,6 +211,7 @@
           <th>เลขบัตรประชาชน</th>
           <th>ระดับชั้น</th>
           <th>คะแนน</th>
+          <th>ข้อมูลเพิ่มเติม</th>
           <th></th>
         </tr>
       </thead>
@@ -393,6 +400,13 @@ function render(){
       <td>${s.national_id ? escapeHtml('••••••••'+String(s.national_id).slice(-4)) : '-'}</td>
       <td>${escapeHtml(s.grade || '-')}</td>
       <td>${s.score !== null && s.score !== undefined ? escapeHtml(String(s.score)) : '-'}</td>
+      <td>
+        <div class="extra-tags">
+          ${Object.entries(s.extra_data || {}).map(([k,v]) =>
+            `<span class="extra-tag"><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</span>`
+          ).join('') || '<span class="sub">-</span>'}
+        </div>
+      </td>
       <td>
         <div class="actions">
           <button class="icon-btn" data-edit="${s.id}" title="แก้ไข">✎</button>
